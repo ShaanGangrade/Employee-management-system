@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | EMS Pro</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="dashboard-wrapper">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>EMS Pro</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="menu-item active" id="menu-employees" onclick="showSection('employees')">
+                    <i class="fas fa-users" style="margin-right: 10px;"></i> Directory
+                </li>
+                <li class="menu-item" id="menu-attendance" onclick="showSection('attendance')">
+                    <i class="fas fa-calendar-check" style="margin-right: 10px;"></i> Attendance
+                </li>
+                <li class="menu-item" id="menu-projects" onclick="showSection('projects')">
+                    <i class="fas fa-tasks" style="margin-right: 10px;"></i> Projects
+                </li>
+                <li class="menu-item" id="menu-idcards" onclick="showSection('idcards')">
+                    <i class="fas fa-id-card" style="margin-right: 10px;"></i> ID Cards
+                </li>
+                <li class="menu-item" id="menu-performance" onclick="showSection('performance')">
+                    <i class="fas fa-chart-line" style="margin-right: 10px;"></i> Performance
+                </li>
+                <li class="menu-item" id="menu-departments" onclick="showSection('departments')">
+                    <i class="fas fa-sitemap" style="margin-right: 10px;"></i> Departments
+                </li>
+                <li class="menu-item" onclick="logout()">
+                    <i class="fas fa-sign-out-alt" style="margin-right: 10px;"></i> Logout
+                </li>
+            </ul>
+        </div>
+
+        <div class="main-content">
+            <div id="employees-section" class="section">
+                <div class="top-bar"
+                    style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between;">
+                    <h1 id="page-title" style="margin: 0;">Employee Directory</h1>
+
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <div style="position: relative;">
+                            <i class="fas fa-search"
+                                style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                            <input type="text" id="employeeSearchInput" placeholder="Search name, phone, dept..."
+                                style="font-family: 'Inter', sans-serif; padding: 0.6rem 1rem 0.6rem 2.2rem; border-radius: 8px; border: 1px solid #e2e8f0; outline: none; width: 250px; font-size: 0.9rem;"
+                                onkeyup="filterEmployees()">
+                        </div>
+                        <button class="login-btn"
+                            style="width: auto; padding: 0.6rem 1rem; background: #10b981; color: white; display: flex; align-items: center; gap: 6px;"
+                            onclick="exportEmployeesCSV()">
+                            <i class="fas fa-file-csv"></i> Export
+                        </button>
+                        <button class="login-btn"
+                            style="width: auto; padding: 0.6rem 1.5rem; display: flex; align-items: center; gap: 6px;"
+                            onclick="openAddModal()">
+                            <i class="fas fa-plus"></i> Add Employee
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid" style="grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 2rem;">
+                    <div class="stat-card"
+                        style="display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 16px; min-height: 200px;">
+                        <h3 style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 0.5rem;">Total Employees
+                        </h3>
+                        <p id="totalEmps" style="font-size: 4rem; color: var(--primary); margin: 0; line-height: 1;">0
+                        </p>
+                    </div>
+                    <div class="stat-card"
+                        style="border-radius: 16px; min-height: 200px; display: flex; justify-content: center; align-items: center; padding: 1rem;">
+                        <canvas id="deptChart" style="max-height: 200px; width: 100%;"></canvas>
+                    </div>
+                </div>
+
+                <div class="data-table-container">
+                    <table id="employeeTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Employee Info</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Salary (Monthly)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="departments-section" class="section" style="display:none;">
+                <div class="top-bar">
+                    <h1>Departments</h1>
+                    <button class="login-btn" style="width: auto; padding: 0.5rem 1.5rem;"
+                        onclick="openDepartmentModal()">
+                        <i class="fas fa-plus"></i> Add Department
+                    </button>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Departments</h3>
+                        <p id="totalDeps">0</p>
+                    </div>
+                </div>
+                <div class="data-table-container">
+                    <table id="departmentTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Location</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="departmentList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="attendance-section" class="section" style="display:none;">
+                <div class="top-bar">
+                    <h1>Employee Attendance</h1>
+                    <p id="todayDate" style="color: var(--text-muted); font-weight: 500;"></p>
+                </div>
+                <div class="data-table-container">
+                    <table id="attendanceAdminTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Designation</th>
+                                <th>Actions</th>
+                                <th>Status Today</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceAdminList"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="projects-section" class="section" style="display:none;">
+                <div class="top-bar">
+                    <h1>Project Management</h1>
+                    <button class="login-btn" style="width: auto; padding: 0.5rem 1.5rem;" onclick="openProjectModal()">
+                        <i class="fas fa-plus"></i> New Project
+                    </button>
+                </div>
+                <div class="data-table-container">
+                    <table id="projectTable">
+                        <thead>
+                            <tr>
+                                <th>Project Title</th>
+                                <th>Assigned To</th>
+                                <th>Deadline</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="idcards-section" class="section" style="display:none;">
+                <div class="top-bar">
+                    <h1>Employee ID Cards</h1>
+                </div>
+                <div id="idCardContainer" style="display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center;">
+                    <!-- Cards injected here -->
+                </div>
+            </div>
+
+            <div id="performance-section" class="section" style="display:none;">
+                <div class="top-bar">
+                    <h1>Performance Tracking</h1>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card" style="border-left-color: var(--success);">
+                        <h3>Avg. Monthly Rating</h3>
+                        <p id="avgRating">4.8/5</p>
+                    </div>
+                </div>
+                <div class="data-table-container">
+                    <table id="performanceTable">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Projects Completed</th>
+                                <th>Efficiency</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="performanceList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Modal -->
+    <div id="employeeModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Add Employee</h2>
+            <form id="employeeForm" enctype="multipart/form-data">
+                <input type="hidden" id="empId">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="lastName" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="phoneNumber" placeholder="+91 ...">
+                    </div>
+                    <div class="form-group">
+                        <label>Designation</label>
+                        <input type="text" id="designation" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <input type="text" id="address">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Salary</label>
+                        <input type="number" id="salary" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <select id="departmentSelect"></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Profile Photo</label>
+                    <input type="file" id="photo" accept="image/*">
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button type="submit" class="login-btn">Save Employee</button>
+                    <button type="button" class="login-btn" style="background: var(--text-muted);"
+                        onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Attendance Calendar Modal -->
+    <div id="attendanceCalendarModal" class="modal">
+        <div class="modal-content" style="width: 800px;">
+            <span class="close-btn" onclick="closeCalendarModal()">&times;</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 id="calendarTitle">Attendance Report</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="action-btn" onclick="prevMonth()"
+                        style="background: var(--primary); color: white;">&lt;</button>
+                    <h3 id="currentMonthDisplay" style="margin: 0; min-width: 120px; text-align: center;">Month Year
+                    </h3>
+                    <button class="action-btn" onclick="nextMonth()"
+                        style="background: var(--primary); color: white;">&gt;</button>
+                </div>
+            </div>
+
+            <div id="calendarGrid" class="calendar-grid">
+                <!-- Days will be injected here -->
+            </div>
+
+            <div class="calendar-legend" style="margin-top: 1.5rem; display: flex; gap: 15px; flex-wrap: wrap;">
+                <span><i class="fas fa-square" style="color: #06d6a0;"></i> Present</span>
+                <span><i class="fas fa-square" style="color: #f72585;"></i> Absent</span>
+                <span><i class="fas fa-square" style="color: #ffba08;"></i> Leave</span>
+                <span><i class="fas fa-square" style="color: #4361ee;"></i> Half Day</span>
+                <span><i class="fas fa-square" style="color: #eee; border: 1px solid #ddd;"></i> Not Marked</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeProjectModal()">&times;</span>
+            <h2>Assign New Project</h2>
+            <form id="projectForm">
+                <div class="form-group">
+                    <label>Project Title</label>
+                    <input type="text" id="projTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>Assign to Employee</label>
+                    <select id="projEmployeeSelect"></select>
+                </div>
+                <div class="form-group">
+                    <label>Deadline</label>
+                    <input type="date" id="projDeadline" required>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="login-btn">Assign Project</button>
+                    <button type="button" class="login-btn" style="background: var(--text-muted);"
+                        onclick="closeProjectModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Department Modal -->
+    <div id="departmentModal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <span class="close-btn" onclick="closeDepartmentModal()">&times;</span>
+            <h2 id="deptModalTitle" style="color: #6366f1; margin-bottom: 1.5rem; font-weight: 700;">Add Department</h2>
+            <form id="departmentForm">
+                <input type="hidden" id="deptId">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label style="display: block; font-weight: 600; color: #475569; margin-bottom: 0.5rem;">Department
+                        Name</label>
+                    <input type="text" id="deptName" required placeholder="e.g. Engineering"
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label
+                        style="display: block; font-weight: 600; color: #475569; margin-bottom: 0.5rem;">Location</label>
+                    <input type="text" id="deptLocation" required placeholder="e.g. Floor 4, Tower B"
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button type="submit" class="login-btn"
+                        style="flex: 2; height: 45px; border-radius: 8px; font-weight: 600;">Save Department</button>
+                    <button type="button" class="login-btn"
+                        style="background: #94a3b8; flex: 1; height: 45px; border-radius: 8px;"
+                        onclick="closeDepartmentModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js?v=2.8"></script>
+    <script>
+        // Check if logged in
+        if (!localStorage.getItem('user')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+
+</html>
