@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS attendance (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     employee_id BIGINT,
     date DATE NOT NULL,
-    status ENUM('PRESENT', 'ABSENT', 'LEAVE') DEFAULT 'PRESENT',
+    status VARCHAR(50) DEFAULT 'PRESENT',
     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
 );
 

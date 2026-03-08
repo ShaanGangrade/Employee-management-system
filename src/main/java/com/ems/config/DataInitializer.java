@@ -12,8 +12,17 @@ import org.springframework.context.annotation.Configuration;
 public class DataInitializer {
 
     @Bean
-    public CommandLineRunner initData(UserRepository userRepository, DepartmentRepository departmentRepository) {
+    public CommandLineRunner initData(UserRepository userRepository, DepartmentRepository departmentRepository,
+            org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         return args -> {
+            try {
+                // Fix for Half Day enum error in MySQL - explicitly change the status column
+                // length
+                jdbcTemplate.execute("ALTER TABLE attendance MODIFY COLUMN status VARCHAR(50)");
+            } catch (Exception e) {
+                System.out.println("Could not alter attendance status column: " + e.getMessage());
+            }
+
             if (userRepository.count() == 0) {
                 User admin = new User();
                 admin.setUsername("admin");

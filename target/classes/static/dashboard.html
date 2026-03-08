@@ -129,9 +129,19 @@
             </div>
 
             <div id="attendance-section" class="section" style="display:none;">
-                <div class="top-bar">
-                    <h1>Employee Attendance</h1>
-                    <p id="todayDate" style="color: var(--text-muted); font-weight: 500;"></p>
+                <div class="top-bar"
+                    style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between;">
+                    <div>
+                        <h1 style="margin: 0;">Employee Attendance</h1>
+                        <p id="todayDate" style="color: var(--text-muted); font-weight: 500; margin: 4px 0 0 0;"></p>
+                    </div>
+                    <div>
+                        <button class="login-btn"
+                            style="width: auto; padding: 0.6rem 1rem; background: #10b981; color: white; display: flex; align-items: center; gap: 6px;"
+                            onclick="exportAttendanceCSV()">
+                            <i class="fas fa-file-csv"></i> Download Report
+                        </button>
+                    </div>
                 </div>
                 <div class="data-table-container">
                     <table id="attendanceAdminTable">
@@ -140,7 +150,7 @@
                                 <th>Name</th>
                                 <th>Designation</th>
                                 <th>Actions</th>
-                                <th>Status Today</th>
+                                <th>Status Today & Time</th>
                             </tr>
                         </thead>
                         <tbody id="attendanceAdminList"></tbody>
@@ -148,11 +158,20 @@
                 </div>
             </div>
             <div id="projects-section" class="section" style="display:none;">
-                <div class="top-bar">
-                    <h1>Project Management</h1>
-                    <button class="login-btn" style="width: auto; padding: 0.5rem 1.5rem;" onclick="openProjectModal()">
-                        <i class="fas fa-plus"></i> New Project
-                    </button>
+                <div class="top-bar"
+                    style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between;">
+                    <h1 style="margin: 0;">Project Management</h1>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <button class="login-btn"
+                            style="width: auto; padding: 0.6rem 1rem; background: #10b981; color: white; display: flex; align-items: center; gap: 6px;"
+                            onclick="exportProjectsCSV()">
+                            <i class="fas fa-file-csv"></i> Download CSV
+                        </button>
+                        <button class="login-btn" style="width: auto; padding: 0.6rem 1.5rem;"
+                            onclick="openProjectModal()">
+                            <i class="fas fa-plus"></i> New Project
+                        </button>
+                    </div>
                 </div>
                 <div class="data-table-container">
                     <table id="projectTable">
@@ -352,7 +371,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=2.8"></script>
+    <script src="script.js?v=3.0"></script>
     <script>
         // Check if logged in
         if (!localStorage.getItem('user')) {

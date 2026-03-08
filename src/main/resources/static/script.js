@@ -379,6 +379,50 @@ async function loadProjects() {
     });
 }
 
+// --- Export Projects to CSV ---
+window.exportProjectsCSV = async function () {
+    try {
+        const res = await fetch(`${API_BASE}/projects`);
+        const projects = await res.json();
+
+        let csvContent = "Project ID,Project Title,Assigned To,Start Date,Deadline,Status\n";
+
+        projects.forEach((p) => {
+            const empName = p.employee ? `${p.employee.firstName} ${p.employee.lastName}` : "Unassigned";
+            const startDate = p.startDate || "N/A";
+
+            const row = [
+                p.id,
+                `"${p.title}"`,
+                `"${empName}"`,
+                `"${startDate}"`,
+                `"${p.deadline}"`,
+                `"${p.status}"`
+            ].join(",");
+
+            csvContent += row + "\n";
+        });
+
+        // Use encodeURIComponent & UTF-8 BOM
+        const uri = "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csvContent);
+
+        const link = document.createElement("a");
+        link.href = uri;
+        link.download = "Project_Management_Export.csv";
+        link.style.display = "none";
+
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+            document.body.removeChild(link);
+        }, 100);
+
+    } catch (err) {
+        alert("Error exporting Projects CSV: " + err);
+    }
+}
+
 async function updateProjectStatus(id, status) {
     try {
         const res = await fetch(`${API_BASE}/projects/${id}/status/${status}`, {
@@ -642,6 +686,11 @@ async function loadAttendanceAdmin() {
             };
             const statusColor = colors[status] || '#8d99ae';
 
+            let timeHtml = '';
+            if (record && record.checkInTime) {
+                timeHtml = `<div style="font-size: 0.75rem; color: #64748b; margin-top: 5px; font-weight: 600;"><i class="fas fa-clock" style="margin-right: 4px;"></i> ${record.checkInTime}</div>`;
+            }
+
             list.innerHTML += `
                 <tr>
                     <td style="padding: 1.2rem;">
@@ -656,23 +705,80 @@ async function loadAttendanceAdmin() {
                     <td><span style="font-weight: 500; color: #444;">${emp.designation}</span></td>
                     <td>
                         <div style="display: flex; gap: 8px;">
-                            <button class="action-btn" style="background: #06d6a0; color: white; min-width: 40px; font-weight: 700;" onclick="markEmployeeAttendance(${emp.id}, 'PRESENT')">P</button>
-                            <button class="action-btn" style="background: #f72585; color: white; min-width: 40px; font-weight: 700;" onclick="markEmployeeAttendance(${emp.id}, 'ABSENT')">A</button>
-                            <button class="action-btn" style="background: #ffba08; color: white; min-width: 40px; font-weight: 700;" onclick="markEmployeeAttendance(${emp.id}, 'LEAVE')">L</button>
-                            <button class="action-btn" style="background: #4361ee; color: white; min-width: 40px; font-weight: 700;" onclick="markEmployeeAttendance(${emp.id}, 'HALF_DAY')">H</button>
+                            <button class="action-btn" title="Present" style="background: #06d6a0; color: white; min-width: 40px; font-weight: 700;" onclick="markEmployeeAttendance(${emp.id}, 'PRESENT')">P</button>
+                            <button class="action-btn" title="Half Day" style="background: #4361ee; color: white; min-width: 40px; font-weight: 700;" onclick="markEmployeeAttendance(${emp.id}, 'HALF_DAY')">H</button>
+                            <button class="action-btn" title="Absent" style="background: #f72585; color: white; min-width: 40px; font-weight: 700;" onclick="markEmployeeAttendance(${emp.id}, 'ABSENT')">A</button>
+                            <button class="action-btn" title="Leave" style="background: #ffba08; color: white; min-width: 40px; font-weight: 700;" onclick="markEmployeeAttendance(${emp.id}, 'LEAVE')">L</button>
                             <button class="action-btn" style="background: #000; color: white; padding: 5px 10px;" onclick="openCalendarModal(${emp.id}, '${emp.firstName} ${emp.lastName}', ${userId})">
-                                <i class="fas fa-calendar-alt"></i> Report
+                                <i class="fas fa-calendar-alt"></i> History
                             </button>
                         </div>
                     </td>
-                    <td>
+                    <td style="text-align: center;">
                         <span class="status-badge" style="background: ${statusColor}; color: white; padding: 6px 15px; border-radius: 50px; display: inline-block; min-width: 100px; text-align: center;">${status}</span>
+                        ${timeHtml}
                     </td>
                 </tr>
             `;
         });
     } catch (err) {
         console.error("Error loading attendance admin:", err);
+    }
+}
+
+// --- Export Attendance to CSV ---
+window.exportAttendanceCSV = async function () {
+    try {
+        const [empRes, attRes] = await Promise.all([
+            fetch(`${API_BASE}/employees`),
+            fetch(`${API_BASE}/attendance/all`)
+        ]);
+
+        const employees = await empRes.json();
+        const allAttendance = await attRes.json();
+
+        let csvContent = "Employee ID,First Name,Last Name,Designation,Attendance Date,Status,Check-In Time\n";
+
+        allAttendance.forEach((record) => {
+            // Find corresponding employee
+            const emp = employees.find(e => e.user && e.user.id === (record.user ? record.user.id : -1));
+            const empId = emp ? emp.id : "N/A";
+            const fName = emp ? emp.firstName : "N/A";
+            const lName = emp ? emp.lastName : "N/A";
+            const desig = emp ? emp.designation : "N/A";
+
+            const timeStr = record.checkInTime ? record.checkInTime : "Not Logged";
+
+            const row = [
+                empId,
+                `"${fName}"`,
+                `"${lName}"`,
+                `"${desig}"`,
+                `"${record.date}"`,
+                `"${record.status}"`,
+                `"${timeStr}"`
+            ].join(",");
+
+            csvContent += row + "\n";
+        });
+
+        // Use encodeURIComponent to correctly parse all characters & UTF-8 BOM for Excel
+        const uri = "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csvContent);
+
+        const link = document.createElement("a");
+        link.href = uri;
+        link.download = "Attendance_Master_Report.csv";
+        link.style.display = "none";
+
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+            document.body.removeChild(link);
+        }, 100);
+
+    } catch (err) {
+        alert("Error exporting Attendance CSV: " + err);
     }
 }
 
@@ -749,10 +855,29 @@ async function renderCalendar() {
         };
         const color = status ? colors[status] : '#eee';
 
+        // Format checkInTime to hh:mm AM/PM without seconds
+        let timeLabel = "";
+        if (record && record.checkInTime) {
+            try {
+                const timeParts = record.checkInTime.split(':');
+                if (timeParts.length >= 2) {
+                    let hour = parseInt(timeParts[0], 10);
+                    let min = timeParts[1];
+                    let ampm = hour >= 12 ? 'PM' : 'AM';
+                    hour = hour % 12;
+                    hour = hour ? hour : 12; // the hour '0' should be '12'
+                    timeLabel = `<div style="font-size: 0.6rem; color: #475569; text-align: center; margin-top: 4px; font-weight: 700; letter-spacing: -0.5px;">${hour}:${min} ${ampm}</div>`;
+                }
+            } catch (e) {
+                // Ignore parsing errors
+            }
+        }
+
         grid.innerHTML += `
-            <div class="calendar-day">
-                <span class="day-num">${day}</span>
-                <div class="day-status" style="background: ${color};"></div>
+            <div class="calendar-day" style="display: flex; flex-direction: column; align-items: center; justify-content: start; padding: 5px;">
+                <span class="day-num" style="align-self: flex-start; margin-left: 2px;">${day}</span>
+                <div class="day-status" style="background: ${color}; width: 100%; height: 6px; border-radius: 4px; margin-top: 5px;"></div>
+                ${timeLabel}
             </div>
         `;
     }
