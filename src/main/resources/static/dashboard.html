@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
 
 <body>
@@ -60,8 +62,8 @@
                         </div>
                         <button class="login-btn"
                             style="width: auto; padding: 0.6rem 1rem; background: #10b981; color: white; display: flex; align-items: center; gap: 6px;"
-                            onclick="exportEmployeesCSV()">
-                            <i class="fas fa-file-csv"></i> Export
+                            onclick="exportEmployeesPDF()">
+                            <i class="fas fa-file-pdf"></i> Download Report
                         </button>
                         <button class="login-btn"
                             style="width: auto; padding: 0.6rem 1.5rem; display: flex; align-items: center; gap: 6px;"
@@ -142,8 +144,8 @@
                     <div>
                         <button class="login-btn"
                             style="width: auto; padding: 0.6rem 1rem; background: #10b981; color: white; display: flex; align-items: center; gap: 6px;"
-                            onclick="exportAttendanceCSV()">
-                            <i class="fas fa-file-csv"></i> Download Report
+                            onclick="exportAttendancePDF()">
+                            <i class="fas fa-file-pdf"></i> Download Report
                         </button>
                     </div>
                 </div>
@@ -168,8 +170,8 @@
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <button class="login-btn"
                             style="width: auto; padding: 0.6rem 1rem; background: #10b981; color: white; display: flex; align-items: center; gap: 6px;"
-                            onclick="exportProjectsCSV()">
-                            <i class="fas fa-file-csv"></i> Download CSV
+                            onclick="exportProjectsPDF()">
+                            <i class="fas fa-file-pdf"></i> Download Report
                         </button>
                         <button class="login-btn" style="width: auto; padding: 0.6rem 1.5rem;"
                             onclick="openProjectModal()">
@@ -281,7 +283,9 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
                         <label>Phone Number</label>
-                        <input type="text" id="phoneNumber" placeholder="+91 ...">
+                        <input type="text" id="phoneNumber" placeholder="e.g. 9876543210" pattern="[0-9]{10}"
+                            maxlength="10" title="Must be exactly 10 digits"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                     </div>
                     <div class="form-group">
                         <label>Designation</label>

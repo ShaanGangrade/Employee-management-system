@@ -270,56 +270,44 @@ window.filterEmployees = function () {
     }
 };
 
-// --- Export Employees to CSV ---
-window.exportEmployeesCSV = async function () {
+// --- Export Employees to PDF ---
+window.exportEmployeesPDF = async function () {
     try {
         const res = await fetch(`${API_BASE}/employees`);
         const employees = await res.json();
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('landscape');
 
-        let csvContent = "ID,First Name,Last Name,Email,Phone Number,Designation,Department,Salary,Address\n";
+        doc.text("Employee Management Report", 14, 15);
+
+        const tableColumn = ["ID", "Name", "Email", "Phone", "Designation", "Department", "Salary"];
+        const tableRows = [];
 
         employees.forEach(emp => {
             const deptName = emp.department ? emp.department.name : "N/A";
-            const row = [
+            const rowData = [
                 emp.id,
-                `"${emp.firstName}"`,
-                `"${emp.lastName}"`,
-                `"${emp.email}"`,
-                `"${emp.phoneNumber || ''}"`,
-                `"${emp.designation}"`,
-                `"${deptName}"`,
-                emp.salary || 0,
-                `"${emp.address || ''}"`
-            ].join(",");
-            csvContent += row + "\n";
+                `${emp.firstName} ${emp.lastName}`,
+                emp.email,
+                emp.phoneNumber || 'N/A',
+                emp.designation,
+                deptName,
+                `$${emp.salary || 0}`
+            ];
+            tableRows.push(rowData);
         });
 
-        // Robust Blob object for downloading
-        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        doc.autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: 20,
+            theme: 'striped'
+        });
 
-        // IE/Edge specific fallback
-        if (window.navigator && window.navigator.msSaveOrOpenBlob) {
-            window.navigator.msSaveOrOpenBlob(blob, "Employees_Export.csv");
-        } else {
-            // Standard HTML5 download
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.setAttribute("download", "Employees_Export.csv");
-            link.style.display = "none";
-
-            document.body.appendChild(link);
-            link.click();
-
-            // Clean up
-            setTimeout(() => {
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(url);
-            }, 100);
-        }
+        doc.save('Employees_Export.pdf');
 
     } catch (err) {
-        alert("Error exporting CSV: " + err);
+        alert("Error exporting PDF: " + err);
     }
 }
 
@@ -412,47 +400,45 @@ async function loadProjects() {
     });
 }
 
-// --- Export Projects to CSV ---
-window.exportProjectsCSV = async function () {
+// --- Export Projects to PDF ---
+window.exportProjectsPDF = async function () {
     try {
         const res = await fetch(`${API_BASE}/projects`);
         const projects = await res.json();
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('landscape');
 
-        let csvContent = "Project ID,Project Title,Assigned To,Start Date,Deadline,Status\n";
+        doc.text("Project Management Report", 14, 15);
+
+        const tableColumn = ["Project ID", "Project Title", "Assigned To", "Start Date", "Deadline", "Status"];
+        const tableRows = [];
 
         projects.forEach((p) => {
             const empName = p.employee ? `${p.employee.firstName} ${p.employee.lastName}` : "Unassigned";
             const startDate = p.startDate || "N/A";
 
-            const row = [
+            const rowData = [
                 p.id,
-                `"${p.title}"`,
-                `"${empName}"`,
-                `"${startDate}"`,
-                `"${p.deadline}"`,
-                `"${p.status}"`
-            ].join(",");
-
-            csvContent += row + "\n";
+                p.title,
+                empName,
+                startDate,
+                p.deadline,
+                p.status
+            ];
+            tableRows.push(rowData);
         });
 
-        // Use encodeURIComponent & UTF-8 BOM
-        const uri = "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csvContent);
+        doc.autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: 20,
+            theme: 'striped'
+        });
 
-        const link = document.createElement("a");
-        link.href = uri;
-        link.download = "Project_Management_Export.csv";
-        link.style.display = "none";
-
-        document.body.appendChild(link);
-        link.click();
-
-        setTimeout(() => {
-            document.body.removeChild(link);
-        }, 100);
+        doc.save('Project_Management_Export.pdf');
 
     } catch (err) {
-        alert("Error exporting Projects CSV: " + err);
+        alert("Error exporting Projects PDF: " + err);
     }
 }
 
@@ -760,8 +746,8 @@ async function loadAttendanceAdmin() {
     }
 }
 
-// --- Export Attendance to CSV ---
-window.exportAttendanceCSV = async function () {
+// --- Export Attendance to PDF ---
+window.exportAttendancePDF = async function () {
     try {
         const [empRes, attRes] = await Promise.all([
             fetch(`${API_BASE}/employees`),
@@ -771,48 +757,45 @@ window.exportAttendanceCSV = async function () {
         const employees = await empRes.json();
         const allAttendance = await attRes.json();
 
-        let csvContent = "Employee ID,First Name,Last Name,Designation,Attendance Date,Status,Check-In Time\n";
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('landscape');
+
+        doc.text("Attendance Master Report", 14, 15);
+
+        const tableColumn = ["Emp ID", "First Name", "Last Name", "Designation", "Date", "Status", "Check-In Time"];
+        const tableRows = [];
 
         allAttendance.forEach((record) => {
-            // Find corresponding employee
             const emp = employees.find(e => e.user && e.user.id === (record.user ? record.user.id : -1));
             const empId = emp ? emp.id : "N/A";
             const fName = emp ? emp.firstName : "N/A";
             const lName = emp ? emp.lastName : "N/A";
             const desig = emp ? emp.designation : "N/A";
-
             const timeStr = record.checkInTime ? record.checkInTime : "Not Logged";
 
-            const row = [
+            const rowData = [
                 empId,
-                `"${fName}"`,
-                `"${lName}"`,
-                `"${desig}"`,
-                `"${record.date}"`,
-                `"${record.status}"`,
-                `"${timeStr}"`
-            ].join(",");
-
-            csvContent += row + "\n";
+                fName,
+                lName,
+                desig,
+                record.date,
+                record.status,
+                timeStr
+            ];
+            tableRows.push(rowData);
         });
 
-        // Use encodeURIComponent to correctly parse all characters & UTF-8 BOM for Excel
-        const uri = "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csvContent);
+        doc.autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: 20,
+            theme: 'striped'
+        });
 
-        const link = document.createElement("a");
-        link.href = uri;
-        link.download = "Attendance_Master_Report.csv";
-        link.style.display = "none";
-
-        document.body.appendChild(link);
-        link.click();
-
-        setTimeout(() => {
-            document.body.removeChild(link);
-        }, 100);
+        doc.save('Attendance_Master_Report.pdf');
 
     } catch (err) {
-        alert("Error exporting Attendance CSV: " + err);
+        alert("Error exporting Attendance PDF: " + err);
     }
 }
 
