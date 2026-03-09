@@ -117,23 +117,6 @@ body {
     overflow-y: auto;
 }
 
-/* Custom minimal scrollbar for sidebar */
-.sidebar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1);
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-}
-
-.sidebar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.4);
-}
 
 .sidebar-header {
     margin-bottom: 3rem;
