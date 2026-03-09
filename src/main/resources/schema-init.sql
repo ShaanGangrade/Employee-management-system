@@ -40,6 +40,17 @@ CREATE TABLE IF NOT EXISTS attendance (
     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
 );
 
+-- Table for Leave Requests
+CREATE TABLE IF NOT EXISTS leave_requests (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    start_date VARCHAR(50),
+    end_date VARCHAR(50),
+    reason TEXT,
+    status VARCHAR(50) DEFAULT 'PENDING',
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Seed Initial Data
 INSERT IGNORE INTO users (username, password, role, full_name) VALUES ('admin', 'admin123', 'ADMIN', 'System Administrator');
 INSERT IGNORE INTO departments (name, location) VALUES ('Human Resources', 'Building A'), ('Engineering', 'Building B'), ('Marketing', 'Building C');

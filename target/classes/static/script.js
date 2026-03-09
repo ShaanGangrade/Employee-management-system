@@ -6,6 +6,38 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
     return false;
 };
 
+// Toast Notification System
+window.showToast = function (msg, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+
+    const icon = type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>';
+    toast.innerHTML = `${icon} <span>${msg}</span>`;
+
+    container.appendChild(toast);
+
+    // Trigger animation
+    setTimeout(() => toast.classList.add('show'), 10);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+};
+
+// Override default alert to use error toast for better UX, optional but safe
+window.alert = function (message) {
+    if (message.toString().toLowerCase().includes("success") || message.toString().toLowerCase().includes("added") || message.toString().toLowerCase().includes("updated")) {
+        showToast(message, 'success');
+    } else {
+        showToast(message, 'error');
+    }
+};
+
 // Global delete function
 window.deleteEmployee = async function (id, btn) {
     if (!id) return;
@@ -91,6 +123,7 @@ function showSection(sectionId) {
     if (sectionId === 'idcards') loadIdCards();
     if (sectionId === 'performance') loadPerformance();
     if (sectionId === 'departments') loadDepartmentsList();
+    if (sectionId === 'leaves') loadLeaves();
 }
 
 // --- Employee Management ---
@@ -1008,5 +1041,141 @@ document.getElementById('departmentForm')?.addEventListener('submit', async (e) 
         }
     } catch (e) {
         alert("Failed to save department.");
+    }
+});
+
+// --- Leave Approval System ---
+async function loadLeaves() {
+    const res = await fetch(`${API_BASE}/leaves/all`);
+    const leaves = await res.json();
+    const list = document.getElementById('leavesList');
+    if (!list) return;
+    list.innerHTML = '';
+
+    leaves.forEach(l => {
+        let statusColor = '#8d99ae';
+        if (l.status === 'APPROVED') statusColor = '#10b981';
+        if (l.status === 'REJECTED') statusColor = '#ef4444';
+        if (l.status === 'PENDING') statusColor = '#f59e0b';
+
+        list.innerHTML += `
+            <tr>
+                <td><strong>${l.user ? l.user.fullName : 'Unknown'}</strong></td>
+                <td>${l.startDate}</td>
+                <td>${l.endDate}</td>
+                <td>${l.reason}</td>
+                <td><span class="status-badge" style="background: ${statusColor}; color: white; padding: 4px 10px; border-radius: 4px;">${l.status}</span></td>
+                <td>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        ${l.status === 'PENDING' ? `
+                            <button class="action-btn" title="Approve" style="background: #10b981; color: white;" onclick="updateLeaveStatus(${l.id}, 'APPROVED')"><i class="fas fa-check"></i></button>
+                            <button class="action-btn" title="Reject" style="background: #ef4444; color: white;" onclick="updateLeaveStatus(${l.id}, 'REJECTED')"><i class="fas fa-times"></i></button>
+                        ` : '<span style="color: #94a3b8; font-size: 0.9em; margin-right: 5px;"><i class="fas fa-lock"></i> Locked</span>'}
+                        <button class="action-btn" title="Delete Leave" style="background: #ef4444; color: white; margin-left: 5px;" onclick="deleteLeaveRequest(${l.id}, this)"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+window.deleteLeaveRequest = async function (id, btn) {
+    if (!id) return;
+
+    // In-button double confirmation
+    if (btn) {
+        if (btn.innerText !== 'Sure?') {
+            const oldHtml = btn.innerHTML;
+            btn.innerHTML = 'Sure?';
+            btn.style.background = '#991b1b';
+            setTimeout(() => {
+                if (btn && btn.innerHTML === 'Sure?') {
+                    btn.innerHTML = oldHtml;
+                    btn.style.background = '#ef4444';
+                }
+            }, 3000);
+            return;
+        }
+        btn.innerHTML = '...';
+        btn.style.pointerEvents = 'none';
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/leaves/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            showToast("Leave Deleted Successfully!", 'success');
+            loadLeaves();
+        } else {
+            const errBody = await res.text();
+            alert("Error deleting leave request. Reason: " + errBody);
+            if (btn) { btn.innerHTML = '<i class="fas fa-trash"></i>'; btn.style.background = '#ef4444'; btn.style.pointerEvents = 'auto'; }
+        }
+    } catch (e) {
+        alert("System error while deleting: " + e);
+        if (btn) { btn.innerHTML = '<i class="fas fa-trash"></i>'; btn.style.background = '#ef4444'; btn.style.pointerEvents = 'auto'; }
+    }
+};
+
+async function updateLeaveStatus(id, status) {
+    try {
+        const res = await fetch(`${API_BASE}/leaves/${id}/status/${status}`, { method: 'PATCH' });
+        if (res.ok) {
+            showToast(`Leave ${status}!`, 'success');
+            loadLeaves();
+        } else {
+            alert("Error updating leave.");
+        }
+    } catch (e) {
+        alert("System Error.");
+    }
+}
+
+async function openLeaveModal() {
+    document.getElementById('leaveForm').reset();
+
+    // Populate dropdown with all employees
+    const select = document.getElementById('leaveEmployeeId');
+    select.innerHTML = '';
+    const res = await fetch(`${API_BASE}/employees`);
+    const employees = await res.json();
+    employees.forEach(emp => {
+        if (emp.user) {
+            select.innerHTML += `<option value="${emp.user.id}">${emp.firstName} ${emp.lastName}</option>`;
+        }
+    });
+
+    document.getElementById('leaveModal').style.display = 'flex';
+}
+
+function closeLeaveModal() {
+    document.getElementById('leaveModal').style.display = 'none';
+}
+
+document.getElementById('leaveForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+        user: { id: parseInt(document.getElementById('leaveEmployeeId').value) },
+        startDate: document.getElementById('leaveStart').value,
+        endDate: document.getElementById('leaveEnd').value,
+        reason: document.getElementById('leaveReason').value
+    };
+
+    try {
+        const res = await fetch(`${API_BASE}/leaves/apply`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+            showToast("Leave Applied Successfully!", 'success');
+            closeLeaveModal();
+            loadLeaves();
+        } else {
+            const errBody = await res.text();
+            alert("Failed to apply leave. Reason: " + errBody);
+        }
+    } catch (err) {
+        alert("System Error: " + err);
     }
 });

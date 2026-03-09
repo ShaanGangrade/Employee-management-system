@@ -32,6 +32,9 @@
                 <li class="menu-item" id="menu-performance" onclick="showSection('performance')">
                     <i class="fas fa-chart-line" style="margin-right: 10px;"></i> Performance
                 </li>
+                <li class="menu-item" id="menu-leaves" onclick="showSection('leaves')">
+                    <i class="fas fa-bed" style="margin-right: 10px;"></i> Leaves
+                </li>
                 <li class="menu-item" id="menu-departments" onclick="showSection('departments')">
                     <i class="fas fa-sitemap" style="margin-right: 10px;"></i> Departments
                 </li>
@@ -223,6 +226,33 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Leave Approval System Section -->
+            <div id="leaves-section" class="section" style="display:none;">
+                <div class="top-bar"
+                    style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between;">
+                    <h1 style="margin: 0;">Leave Requests</h1>
+                    <button class="login-btn" style="width: auto; padding: 0.6rem 1.5rem;" onclick="openLeaveModal()">
+                        <i class="fas fa-plus"></i> Apply Leave
+                    </button>
+                </div>
+                <div class="data-table-container">
+                    <table id="leavesTable">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leavesList"></tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -371,7 +401,55 @@
         </div>
     </div>
 
-    <script src="script.js?v=3.0"></script>
+    <!-- Leave Application Modal -->
+    <div id="leaveModal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <span class="close-btn" onclick="closeLeaveModal()">&times;</span>
+            <h2 id="leaveModalTitle" style="color: #6366f1; margin-bottom: 1.5rem; font-weight: 700;">Apply Leave</h2>
+            <form id="leaveForm">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label style="display: block; font-weight: 600; color: #475569; margin-bottom: 0.5rem;">Select
+                        Employee</label>
+                    <select id="leaveEmployeeId" required
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;"></select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <label style="display: block; font-weight: 600; color: #475569; margin-bottom: 0.5rem;">Start
+                            Date</label>
+                        <input type="date" id="leaveStart" required
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <label style="display: block; font-weight: 600; color: #475569; margin-bottom: 0.5rem;">End
+                            Date</label>
+                        <input type="date" id="leaveEnd" required
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-weight: 600; color: #475569; margin-bottom: 0.5rem;">Reason /
+                        Description</label>
+                    <textarea id="leaveReason" required placeholder="Medical emergency, going out of town..." rows="3"
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; resize: none;"></textarea>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button type="submit" class="login-btn"
+                        style="flex: 2; height: 45px; border-radius: 8px; font-weight: 600;">Submit Application</button>
+                    <button type="button" class="login-btn"
+                        style="background: #94a3b8; flex: 1; height: 45px; border-radius: 8px;"
+                        onclick="closeLeaveModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"
+        style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;">
+    </div>
+
+    <script src="script.js?v=3.2"></script>
     <script>
         // Check if logged in
         if (!localStorage.getItem('user')) {
