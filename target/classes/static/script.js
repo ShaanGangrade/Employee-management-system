@@ -292,7 +292,7 @@ window.exportEmployeesPDF = async function () {
                 emp.phoneNumber || 'N/A',
                 emp.designation,
                 deptName,
-                `$${emp.salary || 0}`
+                `₹${emp.salary || 0}`
             ];
             tableRows.push(rowData);
         });
@@ -613,7 +613,7 @@ async function loadDepartmentsList() {
                     <td style="font-weight: 600; color: var(--primary);">#${index + 1}</td>
                     <td style="font-weight: 600;">${dep.name}</td>
                     <td>${dep.location}</td>
-                    <td>${dep.maxSalary ? '$' + dep.maxSalary : 'No Limit'}</td>
+                    <td>${dep.maxSalary ? '₹' + dep.maxSalary : 'No Limit'}</td>
                     <td>
                         <div style="display: flex; gap: 8px;">
                             <button class="action-btn" title="Edit" onclick="editDepartment(${dep.id})" style="background: #4f46e5; color: white; width: 30px; height: 30px; border-radius: 6px;">

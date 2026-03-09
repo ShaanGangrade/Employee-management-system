@@ -107,10 +107,13 @@ body {
     width: 260px;
     background: var(--sidebar-bg);
     color: white;
-    padding: 2rem;
+    padding: 2rem 2rem 5rem 2rem;
     transition: 0.3s;
     position: fixed;
-    height: 100%;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
     overflow-y: auto;
     scrollbar-width: none;
     /* Firefox */

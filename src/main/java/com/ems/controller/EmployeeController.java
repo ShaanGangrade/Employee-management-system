@@ -84,7 +84,7 @@ public class EmployeeController {
                 if (dept != null && dept.getMaxSalary() != null && employee.getSalary() != null) {
                     if (employee.getSalary() > dept.getMaxSalary()) {
                         return ResponseEntity.badRequest()
-                                .body("Error: Salary exceeds department's maximum limit of $" + dept.getMaxSalary());
+                                .body("Error: Salary exceeds department's maximum limit of ₹" + dept.getMaxSalary());
                     }
                 }
             }
@@ -105,7 +105,7 @@ public class EmployeeController {
             if (dept != null && dept.getMaxSalary() != null && employeeDetails.getSalary() != null) {
                 if (employeeDetails.getSalary() > dept.getMaxSalary()) {
                     return ResponseEntity.badRequest()
-                            .body("Error: Salary exceeds department's maximum limit of $" + dept.getMaxSalary());
+                            .body("Error: Salary exceeds department's maximum limit of ₹" + dept.getMaxSalary());
                 }
             }
         }
