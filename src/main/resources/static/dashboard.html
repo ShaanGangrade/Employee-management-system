@@ -123,6 +123,7 @@
                                 <th>ID</th>
                                 <th>Name</th>
                                 <th>Location</th>
+                                <th>Max Avg Salary</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -390,6 +391,12 @@
                     <input type="text" id="deptLocation" required placeholder="e.g. Floor 4, Tower B"
                         style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
                 </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-weight: 600; color: #475569; margin-bottom: 0.5rem;">Max Average
+                        Salary (Optional)</label>
+                    <input type="number" id="deptMaxSalary" placeholder="e.g. 100000"
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                </div>
                 <div style="display: flex; gap: 1rem; margin-top: 1rem;">
                     <button type="submit" class="login-btn"
                         style="flex: 2; height: 45px; border-radius: 8px; font-weight: 600;">Save Department</button>
@@ -449,7 +456,7 @@
         style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;">
     </div>
 
-    <script src="script.js?v=3.2"></script>
+    <script src="script.js?v=3.3"></script>
     <script>
         // Check if logged in
         if (!localStorage.getItem('user')) {

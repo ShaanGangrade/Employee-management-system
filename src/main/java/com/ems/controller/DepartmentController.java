@@ -30,6 +30,7 @@ public class DepartmentController {
         Department department = departmentRepository.findById(id).orElseThrow();
         department.setName(departmentDetails.getName());
         department.setLocation(departmentDetails.getLocation());
+        department.setMaxSalary(departmentDetails.getMaxSalary());
         return departmentRepository.save(department);
     }
 

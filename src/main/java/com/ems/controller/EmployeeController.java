@@ -26,6 +26,9 @@ public class EmployeeController {
     @Autowired
     private com.ems.service.EmployeeService employeeService;
 
+    @Autowired
+    private com.ems.repository.DepartmentRepository departmentRepository;
+
     @GetMapping
     @Transactional
     public List<Employee> getAllEmployees() {
@@ -75,6 +78,17 @@ public class EmployeeController {
                 employee.setUser(user);
             }
 
+            if (employee.getDepartment() != null && employee.getDepartment().getId() != null) {
+                com.ems.model.Department dept = departmentRepository.findById(employee.getDepartment().getId())
+                        .orElse(null);
+                if (dept != null && dept.getMaxSalary() != null && employee.getSalary() != null) {
+                    if (employee.getSalary() > dept.getMaxSalary()) {
+                        return ResponseEntity.badRequest()
+                                .body("Error: Salary exceeds department's maximum limit of $" + dept.getMaxSalary());
+                    }
+                }
+            }
+
             return ResponseEntity.ok(employeeRepository.save(employee));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
@@ -82,8 +96,20 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Employee> updateEmployee(@PathVariable Long id, @RequestBody Employee employeeDetails) {
+    public ResponseEntity<?> updateEmployee(@PathVariable Long id, @RequestBody Employee employeeDetails) {
         Employee employee = employeeRepository.findById(id).orElseThrow();
+
+        if (employeeDetails.getDepartment() != null && employeeDetails.getDepartment().getId() != null) {
+            com.ems.model.Department dept = departmentRepository.findById(employeeDetails.getDepartment().getId())
+                    .orElse(null);
+            if (dept != null && dept.getMaxSalary() != null && employeeDetails.getSalary() != null) {
+                if (employeeDetails.getSalary() > dept.getMaxSalary()) {
+                    return ResponseEntity.badRequest()
+                            .body("Error: Salary exceeds department's maximum limit of $" + dept.getMaxSalary());
+                }
+            }
+        }
+
         employee.setFirstName(employeeDetails.getFirstName());
         employee.setLastName(employeeDetails.getLastName());
         employee.setEmail(employeeDetails.getEmail());

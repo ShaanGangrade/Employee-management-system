@@ -5,7 +5,8 @@ USE ems_db;
 CREATE TABLE IF NOT EXISTS departments (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
-    location VARCHAR(255)
+    location VARCHAR(255),
+    max_salary DOUBLE
 );
 
 -- Table for Users (Admins/Employees)

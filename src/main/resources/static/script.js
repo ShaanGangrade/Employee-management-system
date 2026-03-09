@@ -627,6 +627,7 @@ async function loadDepartmentsList() {
                     <td style="font-weight: 600; color: var(--primary);">#${index + 1}</td>
                     <td style="font-weight: 600;">${dep.name}</td>
                     <td>${dep.location}</td>
+                    <td>${dep.maxSalary ? '$' + dep.maxSalary : 'No Limit'}</td>
                     <td>
                         <div style="display: flex; gap: 8px;">
                             <button class="action-btn" title="Edit" onclick="editDepartment(${dep.id})" style="background: #4f46e5; color: white; width: 30px; height: 30px; border-radius: 6px;">
@@ -972,6 +973,7 @@ async function editDepartment(id) {
     document.getElementById('deptId').value = dep.id;
     document.getElementById('deptName').value = dep.name;
     document.getElementById('deptLocation').value = dep.location;
+    document.getElementById('deptMaxSalary').value = dep.maxSalary || '';
     document.getElementById('departmentModal').style.display = 'flex';
 }
 
@@ -1018,8 +1020,9 @@ document.getElementById('departmentForm')?.addEventListener('submit', async (e) 
     const id = document.getElementById('deptId').value;
     const name = document.getElementById('deptName').value;
     const location = document.getElementById('deptLocation').value;
+    const maxSalary = document.getElementById('deptMaxSalary').value;
 
-    const department = { name, location };
+    const department = { name, location, maxSalary: maxSalary ? parseFloat(maxSalary) : null };
     const method = id ? 'PUT' : 'POST';
     const url = id ? `${API_BASE}/departments/${id}` : `${API_BASE}/departments`;
 
