@@ -107,24 +107,49 @@ body {
     width: 260px;
     background: var(--sidebar-bg);
     color: white;
-    padding: 2rem 1rem 5rem 2rem;
+    padding: 2rem 1rem 2rem 2rem;
     transition: 0.3s;
     position: fixed;
+    height: 100vh;
     top: 0;
-    bottom: 0;
     left: 0;
     z-index: 1000;
-    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
 }
 
-
 .sidebar-header {
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
     text-align: center;
+    flex-shrink: 0;
 }
 
 .sidebar-menu {
     list-style: none;
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 1rem;
+    padding-bottom: 3rem;
+    /* extra space at bottom of scroll */
+}
+
+/* Custom scrollbar for sidebar menu items */
+.sidebar-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
 }
 
 .menu-item {
@@ -135,6 +160,7 @@ body {
     transition: 0.3s;
     display: flex;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .menu-item:hover,
