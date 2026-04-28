@@ -95,28 +95,52 @@ public class EmployeeController {
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateEmployee(@PathVariable Long id, @RequestBody Employee employeeDetails) {
-        Employee employee = employeeRepository.findById(id).orElseThrow();
+    @PostMapping(value = "/{id}", consumes = { "multipart/form-data" })
+    public ResponseEntity<?> updateEmployee(
+            @PathVariable Long id,
+            @RequestPart("employee") String employeeJson,
+            @RequestPart(value = "photo", required = false) MultipartFile photo) {
+        try {
+            Employee employee = employeeRepository.findById(id).orElseThrow();
+            ObjectMapper mapper = new ObjectMapper();
+            Employee employeeDetails = mapper.readValue(employeeJson, Employee.class);
 
-        if (employeeDetails.getDepartment() != null && employeeDetails.getDepartment().getId() != null) {
-            com.ems.model.Department dept = departmentRepository.findById(employeeDetails.getDepartment().getId())
-                    .orElse(null);
-            if (dept != null && dept.getMaxSalary() != null && employeeDetails.getSalary() != null) {
-                if (employeeDetails.getSalary() > dept.getMaxSalary()) {
-                    return ResponseEntity.badRequest()
-                            .body("Error: Salary exceeds department's maximum limit of ₹" + dept.getMaxSalary());
-                }
+            if (photo != null && !photo.isEmpty()) {
+                File dir = new File(UPLOAD_DIR);
+                if (!dir.exists())
+                    dir.mkdirs();
+                String fileName = UUID.randomUUID().toString() + "_" + photo.getOriginalFilename();
+                Path path = Paths.get(UPLOAD_DIR + fileName);
+                Files.write(path, photo.getBytes());
+                employee.setPhotoUrl("/uploads/" + fileName);
             }
-        }
 
-        employee.setFirstName(employeeDetails.getFirstName());
-        employee.setLastName(employeeDetails.getLastName());
-        employee.setEmail(employeeDetails.getEmail());
-        employee.setSalary(employeeDetails.getSalary());
-        employee.setDesignation(employeeDetails.getDesignation());
-        employee.setDepartment(employeeDetails.getDepartment());
-        return ResponseEntity.ok(employeeRepository.save(employee));
+            if (employeeDetails.getDepartment() != null && employeeDetails.getDepartment().getId() != null) {
+                com.ems.model.Department dept = departmentRepository.findById(employeeDetails.getDepartment().getId())
+                        .orElse(null);
+                if (dept != null && dept.getMaxSalary() != null && employeeDetails.getSalary() != null) {
+                    if (employeeDetails.getSalary() > dept.getMaxSalary()) {
+                        return ResponseEntity.badRequest()
+                                .body("Error: Salary exceeds department's maximum limit of ₹" + dept.getMaxSalary());
+                    }
+                }
+            } else if (employeeDetails.getDepartment() != null && employeeDetails.getDepartment().getId() == null) {
+                employeeDetails.setDepartment(null);
+            }
+
+            employee.setFirstName(employeeDetails.getFirstName());
+            employee.setLastName(employeeDetails.getLastName());
+            employee.setEmail(employeeDetails.getEmail());
+            employee.setPhoneNumber(employeeDetails.getPhoneNumber());
+            employee.setAddress(employeeDetails.getAddress());
+            employee.setSalary(employeeDetails.getSalary());
+            employee.setDesignation(employeeDetails.getDesignation());
+            employee.setDepartment(employeeDetails.getDepartment());
+
+            return ResponseEntity.ok(employeeRepository.save(employee));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")

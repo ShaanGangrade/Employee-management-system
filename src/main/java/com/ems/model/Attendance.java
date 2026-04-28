@@ -19,6 +19,7 @@ public class Attendance {
 
     private LocalDate date;
     private LocalTime checkInTime;
+    private LocalTime checkOutTime;
 
     @Enumerated(EnumType.STRING)
     private Status status;

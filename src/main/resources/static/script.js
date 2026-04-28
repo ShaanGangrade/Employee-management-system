@@ -322,7 +322,7 @@ document.getElementById('employeeForm')?.addEventListener('submit', async (e) =>
         designation: document.getElementById('designation').value,
         address: document.getElementById('address').value,
         salary: parseFloat(document.getElementById('salary').value),
-        department: { id: parseInt(document.getElementById('departmentSelect').value) }
+        department: { id: document.getElementById('departmentSelect').value ? parseInt(document.getElementById('departmentSelect').value) : null }
     };
 
     const formData = new FormData();
@@ -333,13 +333,12 @@ document.getElementById('employeeForm')?.addEventListener('submit', async (e) =>
     }
 
     const url = id ? `${API_BASE}/employees/${id}` : `${API_BASE}/employees`;
-    const method = id ? 'PUT' : 'POST';
+    const method = 'POST'; // Changed to POST for multipart support
 
     try {
         const res = await fetch(url, {
             method: method,
-            body: method === 'POST' ? formData : JSON.stringify(employeeData),
-            headers: method === 'PUT' ? { 'Content-Type': 'application/json' } : {}
+            body: formData
         });
 
         if (res.ok) {
@@ -351,6 +350,7 @@ document.getElementById('employeeForm')?.addEventListener('submit', async (e) =>
         }
     } catch (err) {
         console.error(err);
+        alert("Browser JS Error: " + err);
     }
 });
 

@@ -72,6 +72,63 @@ public class AttendanceController {
         }
     }
 
+    @PostMapping("/punch-face/{employeeId}")
+    public ResponseEntity<?> punchFaceAttendance(@PathVariable Long employeeId) {
+        try {
+            Employee employee = employeeRepository.findById(employeeId)
+                    .orElseThrow(() -> new RuntimeException("Employee not found with ID: " + employeeId));
+
+            User user = employee.getUser();
+            if (user == null) {
+                user = new User();
+                user.setUsername(employee.getEmail());
+                user.setPassword("password123");
+                user.setRole(User.Role.EMPLOYEE);
+                user.setFullName(employee.getFirstName() + " " + employee.getLastName());
+                employee.setUser(user);
+                employeeRepository.save(employee);
+                user = employee.getUser();
+            }
+
+            LocalDate today = LocalDate.now();
+            Optional<Attendance> existing = attendanceRepository.findByUserAndDate(user, today);
+
+            Attendance attendance;
+            if (existing.isPresent()) {
+                attendance = existing.get();
+                if (attendance.getCheckOutTime() == null) {
+                    attendance.setCheckOutTime(LocalTime.now());
+
+                    // Simple duration logic for Half Day vs Full Day
+                    java.time.Duration duration = java.time.Duration.between(attendance.getCheckInTime(),
+                            attendance.getCheckOutTime());
+                    long hours = duration.toHours();
+
+                    if (hours >= 8) {
+                        attendance.setStatus(Attendance.Status.PRESENT);
+                    } else {
+                        // Less than 8 hours -> Half Day automatically
+                        attendance.setStatus(Attendance.Status.HALF_DAY);
+                    }
+                } else {
+                    return ResponseEntity.ok("Already punched out for today.");
+                }
+            } else {
+                attendance = new Attendance();
+                attendance.setUser(user);
+                attendance.setDate(today);
+                attendance.setCheckInTime(LocalTime.now());
+                attendance.setStatus(Attendance.Status.PRESENT);
+            }
+
+            Attendance saved = attendanceRepository.save(attendance);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Failed to punch attendance: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/user/{userId}")
     public List<Attendance> getUserAttendance(@PathVariable Long userId) {
         User user = userRepository.findById(userId).orElseThrow();
