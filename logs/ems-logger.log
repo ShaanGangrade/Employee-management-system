@@ -270,3 +270,40 @@ ERROR in ch.qos.logback.classic.pattern.ClassOfCallerConverter@55493582 - failed
 2026-04-30 00:53:18,121 INFO  c.ems.controller.ProjectController [http-nio-8081-exec-10] Fetching all projects
 2026-04-30 00:53:19,699 INFO  c.e.c.LeaveRequestController [http-nio-8081-exec-7] Fetching all leave requests
 2026-04-30 00:53:20,473 INFO  c.e.controller.DepartmentController [http-nio-8081-exec-1] Fetching all departments
+2026-04-30 01:36:32,457 INFO  o.h.validator.internal.util.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
+2026-04-30 01:36:33,002 INFO  com.ems.EmsApplication [main] Starting EmsApplication using Java 17.0.18 with PID 27908 (C:\Users\MSI\Documents\GitHub\Employee-management-system\target\classes started by MSI in C:\Users\MSI\Documents\GitHub\Employee-management-system)
+2026-04-30 01:36:33,002 DEBUG com.ems.EmsApplication [main] Running with Spring Boot v3.1.5, Spring v6.0.13
+2026-04-30 01:36:33,003 INFO  com.ems.EmsApplication [main] No active profile set, falling back to 1 default profile: "default"
+2026-04-30 01:36:38,015 INFO  o.s.d.r.c.RepositoryConfigurationDelegate [main] Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-04-30 01:36:38,385 INFO  o.s.d.r.c.RepositoryConfigurationDelegate [main] Finished Spring Data repository scanning in 340 ms. Found 6 JPA repository interfaces.
+2026-04-30 01:36:39,241 INFO  o.s.b.w.e.tomcat.TomcatWebServer [main] Tomcat initialized with port(s): 8080 (http)
+2026-04-30 01:36:39,261 INFO  o.a.coyote.http11.Http11NioProtocol [main] Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-30 01:36:39,281 INFO  o.a.catalina.core.StandardService [main] Starting service [Tomcat]
+2026-04-30 01:36:39,283 INFO  o.a.catalina.core.StandardEngine [main] Starting Servlet engine: [Apache Tomcat/10.1.15]
+2026-04-30 01:36:39,407 INFO  o.a.c.c.C.[Tomcat].[localhost].[/] [main] Initializing Spring embedded WebApplicationContext
+2026-04-30 01:36:39,408 INFO  o.s.b.w.s.c.ServletWebServerApplicationContext [main] Root WebApplicationContext: initialization completed in 6190 ms
+2026-04-30 01:36:39,559 INFO  o.h.jpa.internal.util.LogHelper [main] HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-04-30 01:36:39,661 INFO  org.hibernate.Version [main] HHH000412: Hibernate ORM core version 6.2.13.Final
+2026-04-30 01:36:39,664 INFO  org.hibernate.cfg.Environment [main] HHH000406: Using bytecode reflection optimizer
+2026-04-30 01:36:41,086 INFO  o.s.o.j.p.SpringPersistenceUnitInfo [main] No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-04-30 01:36:41,327 INFO  com.zaxxer.hikari.HikariDataSource [main] HikariPool-1 - Starting...
+2026-04-30 01:36:41,698 INFO  com.zaxxer.hikari.pool.HikariPool [main] HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@40f9f60d
+2026-04-30 01:36:41,700 INFO  com.zaxxer.hikari.HikariDataSource [main] HikariPool-1 - Start completed.
+2026-04-30 01:36:41,811 WARN  org.hibernate.orm.deprecation [main] HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-04-30 01:36:43,568 INFO  o.h.e.t.j.p.i.JtaPlatformInitiator [main] HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-04-30 01:36:43,786 INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean [main] Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-04-30 01:36:44,158 DEBUG com.ems.security.JwtRequestFilter [main] Filter 'jwtRequestFilter' configured for use
+2026-04-30 01:36:44,227 INFO  o.s.d.j.r.query.QueryEnhancerFactory [main] Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-04-30 01:36:44,970 WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration [main] spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-04-30 01:36:45,087 INFO  o.s.b.a.w.s.WelcomePageHandlerMapping [main] Adding welcome page: class path resource [static/index.html]
+2026-04-30 01:36:45,305 INFO  o.s.s.web.DefaultSecurityFilterChain [main] Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@6f45a2fd, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@6792aa3e, org.springframework.security.web.context.SecurityContextHolderFilter@52bcd7c9, org.springframework.security.web.header.HeaderWriterFilter@78c34153, org.springframework.security.web.authentication.logout.LogoutFilter@5d28e108, com.ems.security.JwtRequestFilter@34f32575, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@25fb43a9, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@6dccdc50, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1027cdcd, org.springframework.security.web.session.SessionManagementFilter@31b827a6, org.springframework.security.web.access.ExceptionTranslationFilter@712eb075, org.springframework.security.web.access.intercept.AuthorizationFilter@6a4c4261]
+2026-04-30 01:36:45,527 INFO  o.a.coyote.http11.Http11NioProtocol [main] Starting ProtocolHandler ["http-nio-8080"]
+2026-04-30 01:36:45,557 INFO  o.s.b.w.e.tomcat.TomcatWebServer [main] Tomcat started on port(s): 8080 (http) with context path ''
+2026-04-30 01:36:45,572 INFO  com.ems.EmsApplication [main] Started EmsApplication in 17.031 seconds (process running for 18.748)
+2026-04-30 01:36:45,745 DEBUG org.hibernate.SQL [main] select u1_0.id,u1_0.full_name,u1_0.password,u1_0.role,u1_0.username from users u1_0 where u1_0.username=?
+2026-04-30 01:36:45,879 DEBUG org.hibernate.SQL [main] select u1_0.id,u1_0.full_name,u1_0.password,u1_0.role,u1_0.username from users u1_0 where u1_0.id=?
+2026-04-30 01:36:45,908 DEBUG org.hibernate.SQL [main] update users set full_name=?,password=?,role=?,username=? where id=?
+2026-04-30 01:36:45,936 DEBUG org.hibernate.SQL [main] select u1_0.id,u1_0.full_name,u1_0.password,u1_0.role,u1_0.username from users u1_0 where u1_0.username=?
+2026-04-30 01:36:46,025 DEBUG org.hibernate.SQL [main] select u1_0.id,u1_0.full_name,u1_0.password,u1_0.role,u1_0.username from users u1_0 where u1_0.id=?
+2026-04-30 01:36:46,027 DEBUG org.hibernate.SQL [main] update users set full_name=?,password=?,role=?,username=? where id=?
+2026-04-30 01:36:46,060 DEBUG org.hibernate.SQL [main] select count(*) from departments d1_0
