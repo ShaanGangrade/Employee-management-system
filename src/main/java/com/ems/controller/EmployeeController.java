@@ -15,9 +15,13 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
+import lombok.extern.slf4j.Slf4j;
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/employees")
 @CrossOrigin(origins = "*")
+@Slf4j
 public class EmployeeController {
 
     @Autowired
@@ -32,6 +36,7 @@ public class EmployeeController {
     @GetMapping
     @Transactional
     public List<Employee> getAllEmployees() {
+        log.info("Fetching all employees");
         List<Employee> employees = employeeRepository.findAll();
         for (Employee emp : employees) {
             if (emp.getUser() == null) {
@@ -42,7 +47,7 @@ public class EmployeeController {
                 user.setFullName(emp.getFirstName() + " " + emp.getLastName());
                 emp.setUser(user);
                 employeeRepository.save(emp);
-                System.out.println("Auto-created user for employee: " + emp.getFirstName());
+                log.info("Auto-created user for employee: {}", emp.getFirstName());
             }
         }
         return employees;
@@ -55,9 +60,11 @@ public class EmployeeController {
             @RequestPart("employee") String employeeJson,
             @RequestPart(value = "photo", required = false) MultipartFile photo) {
         try {
+            log.info("Adding new employee: {}", employeeJson);
             ObjectMapper mapper = new ObjectMapper();
             Employee employee = mapper.readValue(employeeJson, Employee.class);
 
+            // Manual validation for @Valid equivalent since it's a JSON string
             if (photo != null && !photo.isEmpty()) {
                 File dir = new File(UPLOAD_DIR);
                 if (!dir.exists())
@@ -83,25 +90,30 @@ public class EmployeeController {
                         .orElse(null);
                 if (dept != null && dept.getMaxSalary() != null && employee.getSalary() != null) {
                     if (employee.getSalary() > dept.getMaxSalary()) {
+                        log.warn("Salary exceeds department limit for employee: {}", employee.getFirstName());
                         return ResponseEntity.badRequest()
                                 .body("Error: Salary exceeds department's maximum limit of ₹" + dept.getMaxSalary());
                     }
                 }
             }
 
-            return ResponseEntity.ok(employeeRepository.save(employee));
+            Employee savedEmployee = employeeRepository.save(employee);
+            log.info("Employee saved successfully with ID: {}", savedEmployee.getId());
+            return ResponseEntity.ok(savedEmployee);
         } catch (Exception e) {
+            log.error("Error adding employee", e);
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
 
-    @PostMapping(value = "/{id}", consumes = { "multipart/form-data" })
+    @PutMapping(value = "/{id}", consumes = { "multipart/form-data" })
     public ResponseEntity<?> updateEmployee(
             @PathVariable Long id,
             @RequestPart("employee") String employeeJson,
             @RequestPart(value = "photo", required = false) MultipartFile photo) {
         try {
-            Employee employee = employeeRepository.findById(id).orElseThrow();
+            log.info("Updating employee with ID {}: {}", id, employeeJson);
+            Employee employee = employeeRepository.findById(id).orElseThrow(() -> new RuntimeException("Employee not found"));
             ObjectMapper mapper = new ObjectMapper();
             Employee employeeDetails = mapper.readValue(employeeJson, Employee.class);
 
@@ -120,6 +132,7 @@ public class EmployeeController {
                         .orElse(null);
                 if (dept != null && dept.getMaxSalary() != null && employeeDetails.getSalary() != null) {
                     if (employeeDetails.getSalary() > dept.getMaxSalary()) {
+                        log.warn("Salary exceeds department limit during update for employee: {}", id);
                         return ResponseEntity.badRequest()
                                 .body("Error: Salary exceeds department's maximum limit of ₹" + dept.getMaxSalary());
                     }
@@ -137,8 +150,11 @@ public class EmployeeController {
             employee.setDesignation(employeeDetails.getDesignation());
             employee.setDepartment(employeeDetails.getDepartment());
 
-            return ResponseEntity.ok(employeeRepository.save(employee));
+            Employee updatedEmployee = employeeRepository.save(employee);
+            log.info("Employee updated successfully: {}", id);
+            return ResponseEntity.ok(updatedEmployee);
         } catch (Exception e) {
+            log.error("Error updating employee with ID {}", id, e);
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }

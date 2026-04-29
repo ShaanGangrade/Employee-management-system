@@ -12,6 +12,8 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     List<Attendance> findByUserOrderByDateDesc(User user);
 
+    List<Attendance> findByDate(LocalDate date);
+
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.transaction.annotation.Transactional
     @org.springframework.data.jpa.repository.Query("DELETE FROM Attendance a WHERE a.user = ?1")

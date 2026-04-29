@@ -1,5 +1,23 @@
 const API_BASE = "/api";
 
+// Auth Check: Redirect to login if not authenticated
+if (!localStorage.getItem('user') && !window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
+    window.location.href = 'index.html';
+}
+
+function getAuthHeader() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    return user && user.token ? { 'Authorization': `Bearer ${user.token}` } : {};
+}
+
+async function fetchWithAuth(url, options = {}) {
+    const headers = {
+        ...getAuthHeader(),
+        ...(options.headers || {})
+    };
+    return fetch(url, { ...options, headers });
+}
+
 // Global error handler for this script
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.error('Script Error:', msg, 'at', lineNo, ':', columnNo);
@@ -60,7 +78,7 @@ window.deleteEmployee = async function (id, btn) {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/employees/${id}`, {
+        const response = await fetchWithAuth(`${API_BASE}/employees/${id}`, {
             method: 'DELETE'
         });
 
@@ -79,6 +97,27 @@ window.deleteEmployee = async function (id, btn) {
 if (window.location.pathname.includes('dashboard.html')) {
     loadEmployees();
     loadDepartments();
+    loadDashboardStats();
+}
+
+async function loadDashboardStats() {
+    try {
+        const res = await fetchWithAuth(`${API_BASE}/dashboard/stats`);
+        if (!res.ok) throw new Error("Failed to fetch dashboard stats");
+        const stats = await res.json();
+        
+        const totalEmpsEl = document.getElementById('totalEmps');
+        const presentTodayEl = document.getElementById('presentToday');
+        const absentTodayEl = document.getElementById('absentToday');
+        const totalDepsStatsEl = document.getElementById('totalDepsStats');
+
+        if (totalEmpsEl) totalEmpsEl.innerText = stats.totalEmployees || 0;
+        if (presentTodayEl) presentTodayEl.innerText = stats.presentToday || 0;
+        if (absentTodayEl) absentTodayEl.innerText = stats.absentToday || 0;
+        if (totalDepsStatsEl) totalDepsStatsEl.innerText = stats.totalDepartments || 0;
+    } catch (err) {
+        console.error("Dashboard Stats Error:", err);
+    }
 }
 
 // --- Login Logic ---
@@ -87,6 +126,12 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const errorMsg = document.getElementById('errorMsg');
+
+    if (!username || !password) {
+        errorMsg.innerText = "Please enter both username and password";
+        errorMsg.style.display = 'block';
+        return;
+    }
 
     try {
         const res = await fetch(`${API_BASE}/auth/login`, {
@@ -98,14 +143,15 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
         if (res.ok) {
             const data = await res.json();
             localStorage.setItem('user', JSON.stringify(data));
+            showToast("Login Successful!", "success");
             window.location.href = 'dashboard.html';
         } else {
-            errorMsg.innerText = "Invalid username or password";
+            errorMsg.innerText = "Invalid credentials. Please try again.";
             errorMsg.style.display = 'block';
         }
     } catch (err) {
         console.error("Login Error:", err);
-        errorMsg.innerText = "Network Error. Backend might be down.";
+        errorMsg.innerText = "Unable to connect to server. Check if backend is running.";
         errorMsg.style.display = 'block';
     }
 });
@@ -128,7 +174,7 @@ function showSection(sectionId) {
 
 // --- Employee Management ---
 async function loadEmployees() {
-    const res = await fetch(`${API_BASE}/employees`);
+    const res = await fetchWithAuth(`${API_BASE}/employees`);
     const employees = await res.json();
     const list = document.getElementById('employeeList');
     list.innerHTML = '';
@@ -178,7 +224,7 @@ async function loadEmployees() {
     // --- Draw Graphical Analytics Chart ---
     (async () => {
         try {
-            const dpRes = await fetch(`${API_BASE}/departments`);
+            const dpRes = await fetchWithAuth(`${API_BASE}/departments`);
             const departments = await dpRes.json();
             const deptCounts = {};
 
@@ -273,7 +319,7 @@ window.filterEmployees = function () {
 // --- Export Employees to PDF ---
 window.exportEmployeesPDF = async function () {
     try {
-        const res = await fetch(`${API_BASE}/employees`);
+        const res = await fetchWithAuth(`${API_BASE}/employees`);
         const employees = await res.json();
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('landscape');
@@ -333,10 +379,22 @@ document.getElementById('employeeForm')?.addEventListener('submit', async (e) =>
     }
 
     const url = id ? `${API_BASE}/employees/${id}` : `${API_BASE}/employees`;
-    const method = 'POST'; // Changed to POST for multipart support
+    const method = id ? 'PUT' : 'POST';
+
+    // Simple Email Validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(employeeData.email)) {
+        showToast("Invalid email format!", "error");
+        return;
+    }
+
+    if (employeeData.salary < 0) {
+        showToast("Salary cannot be negative!", "error");
+        return;
+    }
 
     try {
-        const res = await fetch(url, {
+        const res = await fetchWithAuth(url, {
             method: method,
             body: formData
         });
@@ -356,7 +414,7 @@ document.getElementById('employeeForm')?.addEventListener('submit', async (e) =>
 
 // --- Projects & ID Cards ---
 async function loadProjects() {
-    const res = await fetch(`${API_BASE}/projects`);
+    const res = await fetchWithAuth(`${API_BASE}/projects`);
     const projects = await res.json();
     const list = document.getElementById('projectList');
     list.innerHTML = '';
@@ -403,7 +461,7 @@ async function loadProjects() {
 // --- Export Projects to PDF ---
 window.exportProjectsPDF = async function () {
     try {
-        const res = await fetch(`${API_BASE}/projects`);
+        const res = await fetchWithAuth(`${API_BASE}/projects`);
         const projects = await res.json();
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('landscape');
@@ -444,7 +502,7 @@ window.exportProjectsPDF = async function () {
 
 async function updateProjectStatus(id, status) {
     try {
-        const res = await fetch(`${API_BASE}/projects/${id}/status/${status}`, {
+        const res = await fetchWithAuth(`${API_BASE}/projects/${id}/status/${status}`, {
             method: 'PATCH'
         });
         if (res.ok) {
@@ -465,7 +523,7 @@ function getStatusColor(status) {
 }
 
 async function loadIdCards() {
-    const res = await fetch(`${API_BASE}/employees`);
+    const res = await fetchWithAuth(`${API_BASE}/employees`);
     const employees = await res.json();
     const container = document.getElementById('idCardContainer');
     container.innerHTML = '';
@@ -520,9 +578,9 @@ async function loadIdCards() {
 }
 
 async function loadPerformance() {
-    const empRes = await fetch(`${API_BASE}/employees`);
+    const empRes = await fetchWithAuth(`${API_BASE}/employees`);
     const employees = await empRes.json();
-    const projRes = await fetch(`${API_BASE}/projects`);
+    const projRes = await fetchWithAuth(`${API_BASE}/projects`);
     const projects = await projRes.json();
 
     const list = document.getElementById('performanceList');
@@ -559,7 +617,7 @@ function closeProjectModal() {
 }
 
 async function loadEmployeesForSelect() {
-    const res = await fetch(`${API_BASE}/employees`);
+    const res = await fetchWithAuth(`${API_BASE}/employees`);
     const employees = await res.json();
     const select = document.getElementById('projEmployeeSelect');
     select.innerHTML = '';
@@ -576,7 +634,7 @@ document.getElementById('projectForm')?.addEventListener('submit', async (e) => 
         deadline: document.getElementById('projDeadline').value
     };
 
-    const res = await fetch(`${API_BASE}/projects`, {
+    const res = await fetchWithAuth(`${API_BASE}/projects`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -590,7 +648,7 @@ document.getElementById('projectForm')?.addEventListener('submit', async (e) => 
 
 // --- Existing Utilities (Refined) ---
 async function loadDepartments() {
-    const res = await fetch(`${API_BASE}/departments`);
+    const res = await fetchWithAuth(`${API_BASE}/departments`);
     const departments = await res.json();
     const select = document.getElementById('departmentSelect');
     if (select) {
@@ -602,7 +660,7 @@ async function loadDepartments() {
 }
 
 async function loadDepartmentsList() {
-    const res = await fetch(`${API_BASE}/departments`);
+    const res = await fetchWithAuth(`${API_BASE}/departments`);
     const departments = await res.json();
     const list = document.getElementById('departmentList');
     if (list) {
@@ -635,7 +693,7 @@ async function loadDepartmentsList() {
 async function markEmployeeAttendance(employeeId, status) {
     try {
         console.log(`Marking attendance for Employee ${employeeId} as ${status}`);
-        const res = await fetch(`${API_BASE}/attendance/mark/${employeeId}/${status}`, {
+        const res = await fetchWithAuth(`${API_BASE}/attendance/mark/${employeeId}/${status}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -673,8 +731,8 @@ async function loadAttendanceAdmin() {
     try {
         // Fetch employees and attendance in parallel
         const [empRes, attRes] = await Promise.all([
-            fetch(`${API_BASE}/employees`),
-            fetch(`${API_BASE}/attendance/all`)
+            fetchWithAuth(`${API_BASE}/employees`),
+            fetchWithAuth(`${API_BASE}/attendance/all`)
         ]);
 
         const employees = await empRes.json();
@@ -750,8 +808,8 @@ async function loadAttendanceAdmin() {
 window.exportAttendancePDF = async function () {
     try {
         const [empRes, attRes] = await Promise.all([
-            fetch(`${API_BASE}/employees`),
-            fetch(`${API_BASE}/attendance/all`)
+            fetchWithAuth(`${API_BASE}/employees`),
+            fetchWithAuth(`${API_BASE}/attendance/all`)
         ]);
 
         const employees = await empRes.json();
@@ -846,7 +904,7 @@ async function renderCalendar() {
     // Get stats for this month for this user
     let userAttendance = [];
     if (currentViewUserId) {
-        const res = await fetch(`${API_BASE}/attendance/user/${currentViewUserId}`);
+        const res = await fetchWithAuth(`${API_BASE}/attendance/user/${currentViewUserId}`);
         userAttendance = await res.json();
     }
 
@@ -912,7 +970,7 @@ function closeModal() {
 }
 
 async function editEmployee(id) {
-    const res = await fetch(`${API_BASE}/employees`);
+    const res = await fetchWithAuth(`${API_BASE}/employees`);
     const employees = await res.json();
     const emp = employees.find(e => e.id === id);
     document.getElementById('modalTitle').innerText = 'Edit Employee';
@@ -947,7 +1005,7 @@ function closeDepartmentModal() {
 }
 
 async function editDepartment(id) {
-    const res = await fetch(`${API_BASE}/departments`);
+    const res = await fetchWithAuth(`${API_BASE}/departments`);
     const departments = await res.json();
     const dep = departments.find(d => d.id === id);
     if (!dep) return;
@@ -983,7 +1041,7 @@ window.deleteDepartment = async function (id, btn) {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/departments/${id}`, { method: 'DELETE' });
+        const res = await fetchWithAuth(`${API_BASE}/departments/${id}`, { method: 'DELETE' });
         if (res.ok) {
             loadDepartmentsList();
             loadDepartments(); // To refresh select options in employee modal
@@ -1010,7 +1068,7 @@ document.getElementById('departmentForm')?.addEventListener('submit', async (e) 
     const url = id ? `${API_BASE}/departments/${id}` : `${API_BASE}/departments`;
 
     try {
-        const res = await fetch(url, {
+        const res = await fetchWithAuth(url, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(department)
@@ -1032,7 +1090,7 @@ document.getElementById('departmentForm')?.addEventListener('submit', async (e) 
 
 // --- Leave Approval System ---
 async function loadLeaves() {
-    const res = await fetch(`${API_BASE}/leaves/all`);
+    const res = await fetchWithAuth(`${API_BASE}/leaves/all`);
     const leaves = await res.json();
     const list = document.getElementById('leavesList');
     if (!list) return;
@@ -1087,7 +1145,7 @@ window.deleteLeaveRequest = async function (id, btn) {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/leaves/${id}`, { method: 'DELETE' });
+        const res = await fetchWithAuth(`${API_BASE}/leaves/${id}`, { method: 'DELETE' });
         if (res.ok) {
             showToast("Leave Deleted Successfully!", 'success');
             loadLeaves();
@@ -1104,7 +1162,7 @@ window.deleteLeaveRequest = async function (id, btn) {
 
 async function updateLeaveStatus(id, status) {
     try {
-        const res = await fetch(`${API_BASE}/leaves/${id}/status/${status}`, { method: 'PATCH' });
+        const res = await fetchWithAuth(`${API_BASE}/leaves/${id}/status/${status}`, { method: 'PATCH' });
         if (res.ok) {
             showToast(`Leave ${status}!`, 'success');
             loadLeaves();
@@ -1122,7 +1180,7 @@ async function openLeaveModal() {
     // Populate dropdown with all employees
     const select = document.getElementById('leaveEmployeeId');
     select.innerHTML = '';
-    const res = await fetch(`${API_BASE}/employees`);
+    const res = await fetchWithAuth(`${API_BASE}/employees`);
     const employees = await res.json();
     employees.forEach(emp => {
         if (emp.user) {
@@ -1147,7 +1205,7 @@ document.getElementById('leaveForm')?.addEventListener('submit', async (e) => {
     };
 
     try {
-        const res = await fetch(`${API_BASE}/leaves/apply`, {
+        const res = await fetchWithAuth(`${API_BASE}/leaves/apply`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
